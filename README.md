@@ -8,20 +8,22 @@ Dieses Repository beinhaltet eine Software für eine Arduino basierte Automatikt
 
 
 ## Funktion:
-Wenn Tür geschlossen:
+### Wenn Tür geschlossen:
   Switch 1 Endschalter wird getrittert.
   Neopixel Ring zeigt auf allen LED's blau.
   
-Während es öffnens: 
+### Während es öffnens: 
   Neopixelring gegen den Uhrzeigersinn aufleuchten, blau. (simultan mit Motor)
   
   
-Wenn Tür offen:
+### Wenn Tür offen:
   Switch 2 Endschalter wird getriggert.
   Neopixelring zeigt Farbe rot.
   
  Tür soll für 10Sekunden offen bleiben, wenn ein neues Signal erkannt wird fängt der Countdown von Vorne an.
  
- Sicherheitsparameter:
-  1. Wenn die Tür beim Zufahren länger als 4Sekunden braucht, fahre wieder auf und warte 10Sekunden.
+ #### Sicherheitsparameter:
+  1. Wenn die Tür beim Zufahren länger als 4 Sekunden braucht, fahre wieder auf und warte 10 Sekunden.
+  2. Wenn der Motor zu viel Strom zieht, fahre wieder auf und warte 10 Sekunden.
+  
   
