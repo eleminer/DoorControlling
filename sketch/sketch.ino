@@ -34,6 +34,7 @@ void setup()
   digitalWrite(motorforward, LOW); digitalWrite(motorbackward, LOW);
   pinMode(motorforward, OUTPUT); pinMode(motorbackward, OUTPUT);
   pixels.begin(); pixels.clear(); pixels.show();
+  Serial.begin(9600);
 }
 
 void ReadDataEndSwitches()
@@ -52,6 +53,7 @@ void NeopixelRing(int *array)
 {
   for(int i=0; i<12;i++)
   {
+    Serial.println(array[i]);
     if (array[i]==0)
     {
       pixels.setPixelColor(i,pixels.Color(0,0,0));
@@ -64,12 +66,13 @@ void NeopixelRing(int *array)
     {
       pixels.setPixelColor(i,pixels.Color(0,255,0));
     }
-    else if (array[i]==2) //rot
+    else if (array[i]==3) //rot
     {
       pixels.setPixelColor(i,pixels.Color(255,0,0));
     }
   }
   pixels.show();
+  Serial.print("\n");
 }
 
 bool sensorDoorClosed()
@@ -123,7 +126,7 @@ void allNeopixelRed(int *array)
 {
   for(int i=0; i<12;i++)
   {
-    array[i]=2;
+    array[i]=3;
   }
 }
 
@@ -132,14 +135,17 @@ void motor(String rotation)
   if (rotation=="backward")
   {
     digitalWrite(motorforward, LOW); digitalWrite(motorbackward, HIGH);
+    Serial.println("Motor: backward");
   }
   if (rotation=="forward")
   {
     digitalWrite(motorforward, HIGH); digitalWrite(motorbackward, LOW);
+    Serial.println("Motor: forward");
   }
   if (rotation=="stop")
   {
     digitalWrite(motorforward, LOW); digitalWrite(motorbackward, LOW);
+    Serial.println("Motor: stop");
   }
 }
 
@@ -197,6 +203,34 @@ if (currentMillis-previousMillisLEDf>speedLEDRing)
   }
 }
 
+void blueALLone(int *colorarray)
+{
+  allNeopixelBlue(colorarray);
+  NeopixelRing(colorarray);
+}
+
+void redALLone(int *colorarray)
+{
+  allNeopixelRed(colorarray);
+  NeopixelRing(colorarray);
+}
+
+void startpointOpen(int *array)
+{
+  while (1)
+  {
+    Serial.println("startpointOpen");
+  }
+}
+
+void startpointClosed(int *array)
+{
+  while (1)
+  {
+    Serial.println("startpointClosed");
+  }
+}
+
 void loop() 
 {
   int colorarray[12];
@@ -204,72 +238,28 @@ void loop()
   {
     currentMillis = millis();
     ReadDataMotionDetector(); ReadDataEndSwitches();
-        if(sensorDoorClosed()==1) //wenn Tür zu
+
+        if(sensorDoorClosed()==1) //wenn die Tür zu ist
         {
-          allNeopixelBlue(colorarray);
-          NeopixelRing(colorarray);
-          while(sensorMotionHandling()==0)
+          blueALLone(colorarray);
+          startpointClosed(colorarray);
+        }
+        if (sensorDoorOpen()==1) //Wenn die Tür offen ist
+        {
+          redALLone(colorarray);
+          startpointOpen(colorarray);
+        }
+        if (sensorDoorClosed()==0 && sensorDoorOpen()==0) //Position nicht bekannt, Fahre erstmal die Türe auf bis Endpunkt.
+        {
+          while (sensorDoorOpen()==0)
           {
-            ReadDataMotionDetector();
-          }
-          while(sensorDoorOpen()==0)
-          {
-          neopixelbluecounterclockwise(colorarray);
-          
           motor("backward");
           ReadDataEndSwitches();
-          }
-        }
-
-
-        else if (sensorDoorOpen()==1) //wenn Tür offen
-        {
-          allNeopixelRed(colorarray);
-          NeopixelRing(colorarray);
-          currentMillis=millis();
-          previousMillis=millis();
-          ReadDataEndSwitches();
-          while(sensorDoorOpen()==1)
-          {
-            currentMillis=millis();
-            ReadDataMotionDetector();
-              if(sensorMotionHandling()==1)
-              {
-                previousMillis=millis();
-              }
-            if(currentMillis - previousMillis>=openingIntervalTime)
-            {
-                previousMillis=millis();
-                currentMillis=millis();
-                int timeError=0;
-                while(sensorDoorClosed()==0 && sensorMotionHandling()==0 && currentWatch()==0 && timeError==0)
-                {
-                  currentMillis=millis();
-                  ReadDataMotionDetector(); ReadDataEndSwitches();
-                  neopixelblueclockwise(colorarray);
-                  
-                  motor("forward");
-                  if(currentMillis - previousMillis>=closetimeMAX)
-                  {
-                    motor("stop");
-                    timeError=1;
-                  }
-                }
-                  motor("stop");
-            }
-          }
-        }
-
-        else //Position nicht bekannt! Fahre auf!
-        {
-          while(sensorDoorOpen()==0)
-          {
           neopixelbluecounterclockwise(colorarray);
-          
-          motor("backward");
-          ReadDataEndSwitches();
           }
-          motor("stop");
+          motor("stop"); //Tür komplett offen
+          redALLone(colorarray);
+          startpointOpen(colorarray);
         }
   } 
 }
