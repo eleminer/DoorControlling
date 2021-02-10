@@ -152,7 +152,7 @@ void motor(String rotation)
 bool currentWatch()
 {
   int value=0;
-  value=analogRead(currentsensor); //
+  value=analogRead(currentsensor);
   if (value>=currentlimit)
   {
     return 1;
@@ -220,7 +220,7 @@ void startpointOpen(int *array)
 {
   while (1)
   {
-    Serial.println("startpointOpen");
+    Serial.println("startpointOpen"); Serial.println(temp);
     temp = closing(array);
     if (temp==0)
     {
@@ -233,8 +233,7 @@ void startpointClosed(int *array)
 {
   while (1)
   {
-    Serial.println("startpointClosed");
-    Serial.println(temp);
+    Serial.println("startpointClosed"); Serial.println(temp);
     if (temp==0)
     {
     opening(array);
@@ -257,10 +256,7 @@ bool closing(int *array)
     }
   }
   ReadDataEndSwitches();
-  Serial.println("debug"); //hier ist noch ein Fehler....
   previousMillis=millis();
-  Serial.print("Fehlercode:");
-  Serial.println(sensorDoorClosed());
   while(sensorDoorClosed()==0)
   {
     ReadDataEndSwitches();ReadDataMotionDetector();
@@ -316,17 +312,17 @@ void loop()
     currentMillis = millis();
     ReadDataMotionDetector(); ReadDataEndSwitches();
 
-        if(sensorDoorClosed()==1) //wenn die Tür zu ist
+        if(sensorDoorClosed()==1)
         {
           blueALLone(colorarray);
           startpointClosed(colorarray);
         }
-        if (sensorDoorOpen()==1) //Wenn die Tür offen ist
+        if (sensorDoorOpen()==1)
         {
           redALLone(colorarray);
           startpointOpen(colorarray);
         }
-        if (sensorDoorClosed()==0 && sensorDoorOpen()==0) //Position nicht bekannt, Fahre erstmal die Türe auf bis Endpunkt.
+        if (sensorDoorClosed()==0 && sensorDoorOpen()==0)
         {
           while (sensorDoorOpen()==0)
           {
@@ -334,7 +330,7 @@ void loop()
           ReadDataEndSwitches();
           neopixelbluecounterclockwise(colorarray);
           }
-          motor("stop"); //Tür komplett offen
+          motor("stop");
           redALLone(colorarray);
           startpointOpen(colorarray);
         }
