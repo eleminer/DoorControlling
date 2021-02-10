@@ -8,13 +8,12 @@ const int motorforward=7; // Mosfet Motor "Vor"
 const int motorbackward=8; // Mosfet Motor "Zurück"
 const int currentsensor=A3; // Stromsensor Motor
 const int LED_PIN=9; //Neopixel Ring Datenleitung 12Pixel
-Adafruit_NeoPixel pixels(12, LED_PIN, NEO_GRB + NEO_KHZ800);
-
-
+const int currentlimit=1000; //Wert zwischen 0 und 1023 Stromsensor
+const int closetimeMAX= 4*1000; //4Sekunden in Millis
 const long openingIntervalTime = 10*1000; //10Sekunden in millis
 unsigned long currentMillis= 0;
 unsigned long previousMillis = 0;
-
+Adafruit_NeoPixel pixels(12, LED_PIN, NEO_GRB + NEO_KHZ800);
 
 typedef struct sensordataSwitches{
   bool sensorSwitch1;
@@ -97,12 +96,12 @@ bool sensorDoorOpen()
 
 bool sensorMotionHandling()
 {
-if (door.sensorMotiondetector1==true || door.sensorMotiondetector2==true)
+  if (door.sensorMotiondetector1==true || door.sensorMotiondetector2==true)
   {
     door.sensorMotiondetector1=false; door.sensorMotiondetector2=false;
     return 1;
   }
-else
+  else
   {
     return 0;
   }
@@ -139,6 +138,27 @@ void motor(String rotation)
     digitalWrite(motorforward, LOW); digitalWrite(motorbackward, LOW);
   }
 }
+bool currentWatch()
+{
+  int value=0;
+  value=analogRead(currentsensor); //
+  if (value>=currentlimit)
+  {
+    return 1;
+  }
+  else
+  {
+    return 0;
+  }
+}
+void neopixelblueclockwise(int *array)
+{
+
+}
+void neopixelbluecounterclockwise(int *array)
+{
+
+}
 
 void loop() 
 {
@@ -157,6 +177,7 @@ void loop()
           }
           while(sensorDoorOpen()==0)
           motor("backward");
+          
           ReadDataEndSwitches();
         }
 
@@ -178,10 +199,19 @@ void loop()
               }
             if(currentMillis - previousMillis>=openingIntervalTime)
             {
-                while(sensorDoorClosed()==0 && sensorMotionHandling()==0)
+                previousMillis=millis();
+                currentMillis=millis();
+                int timeError=0;
+                while(sensorDoorClosed()==0 && sensorMotionHandling()==0 && currentWatch()==0 && timeError==0)
                 {
+                  currentMillis=millis();
                   ReadDataMotionDetector(); ReadDataEndSwitches();
                   motor("forward");
+                  if(currentMillis - previousMillis>=closetimeMAX)
+                  {
+                    motor("stop");
+                    timeError=1;
+                  }
                 }
                   motor("stop");
             }
