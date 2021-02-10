@@ -9,10 +9,14 @@ const int motorbackward=8; // Mosfet Motor "Zurück"
 const int currentsensor=A3; // Stromsensor Motor
 const int LED_PIN=9; //Neopixel Ring Datenleitung 12Pixel
 const int currentlimit=1000; //Wert zwischen 0 und 1023 Stromsensor
-const int closetimeMAX= 4*1000; //4Sekunden in Millis
-const long openingIntervalTime = 10*1000; //10Sekunden in millis
-unsigned long currentMillis= 0;
-unsigned long previousMillis = 0;
+const int closetimeMAX=4*1000; //4Sekunden in Millis
+const long openingIntervalTime=10*1000; //10Sekunden in millis
+const long speedLEDRing=400; //Zeit wie lange ein Pixel vom Ring leuchten soll in ms
+unsigned long currentMillis=0;
+unsigned long previousMillis=0;
+unsigned long previousMillisLED=0;
+unsigned long previousMillisLEDf=0;
+int internalArrayPosition=0;
 Adafruit_NeoPixel pixels(12, LED_PIN, NEO_GRB + NEO_KHZ800);
 
 typedef struct sensordataSwitches{
@@ -138,6 +142,7 @@ void motor(String rotation)
     digitalWrite(motorforward, LOW); digitalWrite(motorbackward, LOW);
   }
 }
+
 bool currentWatch()
 {
   int value=0;
@@ -151,13 +156,45 @@ bool currentWatch()
     return 0;
   }
 }
+
 void neopixelblueclockwise(int *array)
 {
-
+currentMillis = millis();
+if (currentMillis-previousMillisLED>speedLEDRing)
+  {
+    for(int i=0; i<12;i++)
+      {
+        array[i]=0;
+      }
+    if (internalArrayPosition>=12)
+    {
+      internalArrayPosition=0;
+    }
+    array[internalArrayPosition]=1;
+    internalArrayPosition=internalArrayPosition+1;
+    NeopixelRing(array);
+    previousMillisLED=millis();
+  }
 }
+
 void neopixelbluecounterclockwise(int *array)
 {
-
+currentMillis = millis();
+if (currentMillis-previousMillisLEDf>speedLEDRing)
+  {
+    for(int i=0; i<12;i++)
+      {
+        array[i]=0;
+      }
+    if (internalArrayPosition<0)
+    {
+      internalArrayPosition=11;
+    }
+    array[internalArrayPosition]=1;
+    internalArrayPosition=internalArrayPosition-1;
+    NeopixelRing(array);
+    previousMillisLEDf=millis();
+  }
 }
 
 void loop() 
@@ -176,9 +213,12 @@ void loop()
             ReadDataMotionDetector();
           }
           while(sensorDoorOpen()==0)
-          motor("backward");
+          {
+          neopixelbluecounterclockwise(colorarray);
           
+          motor("backward");
           ReadDataEndSwitches();
+          }
         }
 
 
@@ -206,6 +246,8 @@ void loop()
                 {
                   currentMillis=millis();
                   ReadDataMotionDetector(); ReadDataEndSwitches();
+                  neopixelblueclockwise(colorarray);
+                  
                   motor("forward");
                   if(currentMillis - previousMillis>=closetimeMAX)
                   {
@@ -222,6 +264,8 @@ void loop()
         {
           while(sensorDoorOpen()==0)
           {
+          neopixelbluecounterclockwise(colorarray);
+          
           motor("backward");
           ReadDataEndSwitches();
           }
