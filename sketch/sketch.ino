@@ -10,7 +10,7 @@ const int currentsensor=A3; // Stromsensor Motor
 const int LED_PIN=9; //Neopixel Ring Datenleitung 12Pixel
 const int currentlimit=1000; //Wert zwischen 0 und 1023 Stromsensor
 const int closetimeMAX=4*1000; //4Sekunden in Millis
-const long openingIntervalTime=10*1000; //10Sekunden in millis
+const long openingIntervalTime=30*1000; //10Sekunden in millis
 const long speedLEDRing=400; //Zeit wie lange ein Pixel vom Ring leuchten soll in ms
 unsigned long currentMillis=0;
 unsigned long previousMillis=0;
@@ -215,12 +215,13 @@ void redALLone(int *colorarray)
   NeopixelRing(colorarray);
 }
 
+
 void startpointOpen(int *array)
 {
-  while (1)
-  {
     Serial.println("startpointOpen");
-  }
+    closing(array);
+    startpointClosed(array);
+
 }
 
 void startpointClosed(int *array)
@@ -228,7 +229,52 @@ void startpointClosed(int *array)
   while (1)
   {
     Serial.println("startpointClosed");
+    opening(array);
+    closing(array);
   }
+}
+
+void closing(int *array)
+{
+  currentMillis=millis();
+  previousMillis=millis();
+  while(currentMillis-previousMillis<=openingIntervalTime)
+  {
+    currentMillis=millis();
+    ReadDataMotionDetector();
+    if (sensorMotionHandling==1)
+    {
+      previousMillis=millis();
+    }
+  }
+  ReadDataEndSwitches();
+  Serial.println("debug");
+  while(sensorDoorClosed()==0)
+  {
+    ReadDataEndSwitches();
+    neopixelblueclockwise(array);
+    motor("forward");
+  }
+  motor("stop");
+  blueALLone(array);
+}
+
+void opening(int *array)
+{
+  ReadDataMotionDetector();
+  while(sensorMotionHandling()==0)
+  {
+    ReadDataMotionDetector();
+  }
+  ReadDataEndSwitches();
+  while(sensorDoorOpen()==0)
+  {
+    ReadDataEndSwitches();
+    neopixelbluecounterclockwise(array);
+    motor("backward");
+  }
+  motor("stop");
+  redALLone(array);
 }
 
 void loop() 
