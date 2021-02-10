@@ -15,7 +15,7 @@ typedef struct sensordataSwitches{
   bool sensorSwitch2;
   bool sensorMotiondetector1;
   bool sensorMotiondetector2;
-}
+};
 sensordataSwitches door = {false,false,false,false};
 
 
@@ -26,12 +26,23 @@ void setup() {
   pixels.clear(); pixels.show();
 }
 
+void ReadDataEndSwitches()
+{
+if (digitalRead(endswitch1)==LOW){door.sensorSwitch1=true;}
+if (digitalRead(endswitch2)==LOW){door.sensorSwitch2=true;}
+}
+void ReadDataMotionDetector()
+{
+if (digitalRead(motiondetector1)==LOW){door.sensorMotiondetector1=true;}
+if (digitalRead(motiondetector2)==LOW){door.sensorMotiondetector2=true;}
+}
 
+void NeopixelRing()
+{
+  
+}
 
 void loop() {
   // put your main code here, to run repeatedly:
 
 }
-
-
-
