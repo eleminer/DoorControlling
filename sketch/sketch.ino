@@ -1,6 +1,6 @@
 #include <Adafruit_NeoPixel.h>
 
-const int endswitch1=3; //Tür geschlossen, Endschalter
+const int endswitch1=2; //Tür geschlossen, Endschalter
 const int endswitch2=4; // Tür offen, Endschalter
 const int motiondetector1=5; //Bewegungsmelder 1
 const int motiondetector2=6; //Bewegungsmelder 2
@@ -26,7 +26,7 @@ typedef struct sensordataSwitches{
   bool sensorMotiondetector2;
 };
 sensordataSwitches door = {false,false,false,false};
-
+int temp=0;
 
 void setup() 
 {
@@ -218,10 +218,15 @@ void redALLone(int *colorarray)
 
 void startpointOpen(int *array)
 {
+  while (1)
+  {
     Serial.println("startpointOpen");
-    closing(array);
+    temp = closing(array);
+    if (temp==0)
+    {
     startpointClosed(array);
-
+    }
+  }
 }
 
 void startpointClosed(int *array)
@@ -229,12 +234,16 @@ void startpointClosed(int *array)
   while (1)
   {
     Serial.println("startpointClosed");
+    Serial.println(temp);
+    if (temp==0)
+    {
     opening(array);
-    closing(array);
+    }
+    temp= closing(array);
   }
 }
 
-void closing(int *array)
+bool closing(int *array)
 {
   currentMillis=millis();
   previousMillis=millis();
@@ -249,14 +258,34 @@ void closing(int *array)
   }
   ReadDataEndSwitches();
   Serial.println("debug");
+  previousMillis=millis();
   while(sensorDoorClosed()==0)
   {
-    ReadDataEndSwitches();
-    neopixelblueclockwise(array);
-    motor("forward");
+    ReadDataEndSwitches();ReadDataMotionDetector();
+    currentMillis=millis();
+    if(sensorMotionHandling()==0 && currentWatch()==0 && currentMillis-previousMillis<=closetimeMAX)
+    {
+      neopixelblueclockwise(array);
+      motor("forward");
+    }
+    else
+    {
+      motor("stop");
+      ReadDataEndSwitches();
+      while(sensorDoorOpen()==0)
+      {
+        motor("backward");
+        neopixelbluecounterclockwise(array);
+        ReadDataEndSwitches();
+      }
+      motor("stop");
+      redALLone(array);
+      return 1;
+    }
   }
   motor("stop");
   blueALLone(array);
+  return 0;
 }
 
 void opening(int *array)
