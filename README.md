@@ -22,6 +22,9 @@ Dieses Repository beinhaltet eine Software für eine Arduino basierte Automatikt
   
  Tür soll für 10Sekunden offen bleiben, wenn ein neues Signal erkannt wird fängt der Countdown von Vorne an.
  
+### Während des schließens:
+  Neopixelring mit dem Uhrzeigersinn aufleuchten, blau. (simultan mit Motor)
+ 
  #### Sicherheitsparameter:
   1. Wenn die Tür beim Zufahren länger als 4 Sekunden braucht, fahre wieder auf und warte 10 Sekunden.
   2. Wenn der Motor zu viel Strom zieht, fahre wieder auf und warte 10 Sekunden.
