@@ -257,8 +257,10 @@ bool closing(int *array)
     }
   }
   ReadDataEndSwitches();
-  Serial.println("debug");
+  Serial.println("debug"); //hier ist noch ein Fehler....
   previousMillis=millis();
+  Serial.print("Fehlercode:");
+  Serial.println(sensorDoorClosed());
   while(sensorDoorClosed()==0)
   {
     ReadDataEndSwitches();ReadDataMotionDetector();
