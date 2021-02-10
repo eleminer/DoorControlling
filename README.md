@@ -13,7 +13,7 @@ Dieses Repository beinhaltet eine Software für eine Arduino basierte Automatikt
   Switch 1 Endschalter wird getrittert.
   Neopixel Ring zeigt auf allen LED's blau.
   
-### Während es Öffnens: 
+### Während des Öffnens: 
   Neopixelring gegen dem Uhrzeigersinn aufleuchten, blau. (simultan mit Motor)
   
   
