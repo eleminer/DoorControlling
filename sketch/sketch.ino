@@ -273,6 +273,7 @@ bool closing(int *array)
     else
     {
       motor("stop");
+      sensorDoorOpen();
       ReadDataEndSwitches();
       while(sensorDoorOpen()==0)
       {
