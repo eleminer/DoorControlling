@@ -11,7 +11,7 @@ const int LED_PIN=9; //Neopixel Ring Datenleitung 12Pixel
 const int currentlimit=1000; //Wert zwischen 0 und 1023 Stromsensor
 const int closetimeMAX=4*1000; //4Sekunden in Millis
 const long openingIntervalTime=10*1000; //10Sekunden in millis
-const long speedLEDRing=400; //Zeit wie lange ein Pixel vom Ring leuchten soll in ms
+const long speedLEDRing=100; //Zeit wie lange ein Pixel vom Ring leuchten soll in ms
 unsigned long currentMillis=0;
 unsigned long previousMillis=0;
 unsigned long previousMillisLED=0;
@@ -250,9 +250,10 @@ bool closing(int *array)
   {
     currentMillis=millis();
     ReadDataMotionDetector();
-    if (sensorMotionHandling==1)
+    if (sensorMotionHandling()==1)
     {
       previousMillis=millis();
+      currentMillis=millis();
     }
   }
   ReadDataEndSwitches();
