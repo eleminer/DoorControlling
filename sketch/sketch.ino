@@ -256,12 +256,15 @@ bool closing(int *array)
       currentMillis=millis();
     }
   }
+  sensorDoorClosed();
   ReadDataEndSwitches();
   previousMillis=millis();
   while(sensorDoorClosed()==0)
   {
+    sensorMotionHandling();
     ReadDataEndSwitches();ReadDataMotionDetector();
     currentMillis=millis();
+
     if(sensorMotionHandling()==0 && currentWatch()==0 && currentMillis-previousMillis<=closetimeMAX)
     {
       neopixelblueclockwise(array);
@@ -280,6 +283,7 @@ bool closing(int *array)
       motor("stop");
       redALLone(array);
       return 1;
+      break;
     }
   }
   motor("stop");
@@ -294,6 +298,7 @@ void opening(int *array)
   {
     ReadDataMotionDetector();
   }
+  sensorDoorOpen();
   ReadDataEndSwitches();
   while(sensorDoorOpen()==0)
   {
