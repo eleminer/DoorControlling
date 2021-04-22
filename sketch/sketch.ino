@@ -4,14 +4,19 @@ const int endswitch1=2; //Tür geschlossen, Endschalter
 const int endswitch2=4; // Tür offen, Endschalter
 const int motiondetector1=5; //Bewegungsmelder 1
 const int motiondetector2=6; //Bewegungsmelder 2
-const int motorforward=7; // Mosfet Motor "Vor"
-const int motorbackward=8; // Mosfet Motor "Zurück"
-const int currentsensor=A3; // Stromsensor Motor
+const int motorforward=7; // Mosfet Motor "Vor" // Motor 2: 11
+const int motorbackward=8; // Mosfet Motor "Zurück" // Motor 2: 10
+//parallel
+const int motorforward2=11; // Mosfet Motor "Vor" // Motor 2: 11
+const int motorbackward2=10; // Mosfet Motor "Zurück" // Motor 2: 10
+
+const int currentsensor=A4; // Stromsensor Motor //Motor 2: A3
 const int LED_PIN=9; //Neopixel Ring Datenleitung 12Pixel
-const int currentlimit=1000; //Wert zwischen 0 und 1023 Stromsensor
+const int currentlimit=10; //Wert zwischen 0 und 1023 Stromsensor
 const int closetimeMAX=4*1000; //4Sekunden in Millis
 const long openingIntervalTime=10*1000; //10Sekunden in millis
-const long speedLEDRing=100; //Zeit wie lange ein Pixel vom Ring leuchten soll in ms
+const long speedLEDRing=50; //Zeit wie lange ein Pixel vom Ring leuchten soll in ms
+const int  bounceDelayCurrent=100; //Zeit in ms, welche der Motor zum Anlaufen benötigt. 
 unsigned long currentMillis=0;
 unsigned long previousMillis=0;
 unsigned long previousMillisLED=0;
@@ -27,12 +32,18 @@ typedef struct sensordataSwitches{
 };
 sensordataSwitches door = {false,false,false,false};
 int temp=0;
+int currentbool=0;
 
 void setup() 
 {
-  pinMode(endswitch1, INPUT_PULLUP); pinMode(endswitch2, INPUT_PULLUP); pinMode(motiondetector1, INPUT_PULLUP); pinMode(motiondetector2, INPUT_PULLUP);
+  //pinMode(endswitch1, INPUT_PULLUP); pinMode(endswitch2, INPUT_PULLUP); pinMode(motiondetector1, INPUT_PULLUP); pinMode(motiondetector2, INPUT_PULLUP);
   digitalWrite(motorforward, LOW); digitalWrite(motorbackward, LOW);
+  //parallel
+  digitalWrite(motorforward2, LOW); digitalWrite(motorbackward2, LOW);
   pinMode(motorforward, OUTPUT); pinMode(motorbackward, OUTPUT);
+  //parallel
+  pinMode(motorforward2, OUTPUT); pinMode(motorbackward2, OUTPUT);
+
   pixels.begin(); pixels.clear(); pixels.show();
   Serial.begin(9600);
 }
@@ -53,7 +64,6 @@ void NeopixelRing(int *array)
 {
   for(int i=0; i<12;i++)
   {
-    Serial.println(array[i]);
     if (array[i]==0)
     {
       pixels.setPixelColor(i,pixels.Color(0,0,0));
@@ -72,7 +82,6 @@ void NeopixelRing(int *array)
     }
   }
   pixels.show();
-  Serial.print("\n");
 }
 
 bool sensorDoorClosed()
@@ -135,17 +144,20 @@ void motor(String rotation)
   if (rotation=="backward")
   {
     digitalWrite(motorforward, LOW); digitalWrite(motorbackward, HIGH);
-    Serial.println("Motor: backward");
+    //parallel
+    digitalWrite(motorforward2, LOW); digitalWrite(motorbackward2, HIGH);
   }
   if (rotation=="forward")
   {
     digitalWrite(motorforward, HIGH); digitalWrite(motorbackward, LOW);
-    Serial.println("Motor: forward");
+    //parallel
+    digitalWrite(motorforward2, HIGH); digitalWrite(motorbackward2, LOW);
   }
   if (rotation=="stop")
   {
     digitalWrite(motorforward, LOW); digitalWrite(motorbackward, LOW);
-    Serial.println("Motor: stop");
+    //parallel
+    digitalWrite(motorforward2, LOW); digitalWrite(motorbackward2, LOW);
   }
 }
 
@@ -153,6 +165,7 @@ bool currentWatch()
 {
   int value=0;
   value=analogRead(currentsensor);
+  Serial.println(value);
   if (value>=currentlimit)
   {
     return 1;
@@ -166,7 +179,7 @@ bool currentWatch()
 void neopixelblueclockwise(int *array)
 {
 currentMillis = millis();
-if (currentMillis-previousMillisLED>speedLEDRing)
+if (((unsigned long) currentMillis-previousMillisLED)>speedLEDRing)
   {
     for(int i=0; i<12;i++)
       {
@@ -186,7 +199,7 @@ if (currentMillis-previousMillisLED>speedLEDRing)
 void neopixelbluecounterclockwise(int *array)
 {
 currentMillis = millis();
-if (currentMillis-previousMillisLEDf>speedLEDRing)
+if (((unsigned long) currentMillis-previousMillisLEDf)>speedLEDRing)
   {
     for(int i=0; i<12;i++)
       {
@@ -220,7 +233,6 @@ void startpointOpen(int *array)
 {
   while (1)
   {
-    Serial.println("startpointOpen"); Serial.println(temp);
     temp = closing(array);
     if (temp==0)
     {
@@ -233,7 +245,6 @@ void startpointClosed(int *array)
 {
   while (1)
   {
-    Serial.println("startpointClosed"); Serial.println(temp);
     if (temp==0)
     {
     opening(array);
@@ -246,7 +257,7 @@ bool closing(int *array)
 {
   currentMillis=millis();
   previousMillis=millis();
-  while(currentMillis-previousMillis<=openingIntervalTime)
+  while(((unsigned long) currentMillis-previousMillis)<=openingIntervalTime)
   {
     currentMillis=millis();
     ReadDataMotionDetector();
@@ -264,8 +275,11 @@ bool closing(int *array)
     sensorMotionHandling();
     ReadDataEndSwitches();ReadDataMotionDetector();
     currentMillis=millis();
-
-    if(sensorMotionHandling()==0 && currentWatch()==0 && currentMillis-previousMillis<=closetimeMAX)
+    if (((unsigned long) currentMillis-previousMillis)>bounceDelayCurrent)
+    {
+      currentbool=currentWatch();
+    }
+    if(sensorMotionHandling()==0 && currentbool==0 && ((unsigned long)currentMillis-previousMillis)<=closetimeMAX)
     {
       neopixelblueclockwise(array);
       motor("forward");
